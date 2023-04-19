@@ -72,6 +72,7 @@ async function commonAfterAll() {
 }
 
 const u1Token = createToken({ username: "u1", isAdmin: false });
+const u2AdminToken = createToken({ username: "u2", isAdmin: true });
 
 const comp1 = {
 	handle: "c1",
@@ -103,6 +104,7 @@ module.exports = {
 	commonAfterEach,
 	commonAfterAll,
 	u1Token,
+	u2AdminToken,
 	comp1,
 	comp2,
 	comp3,
