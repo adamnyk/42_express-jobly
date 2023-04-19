@@ -11,6 +11,7 @@ const {
 	commonAfterEach,
 	commonAfterAll,
 	u1Token,
+	u2AdminToken,
 	comp1,
 	comp2,
 	comp3,
@@ -32,15 +33,23 @@ describe("POST /companies", function () {
 		numEmployees: 10,
 	};
 
-	test("ok for users", async function () {
+	test("ok for admin", async function () {
 		const resp = await request(app)
 			.post("/companies")
 			.send(newCompany)
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(201);
 		expect(resp.body).toEqual({
 			company: newCompany,
 		});
+	});
+
+	test("unauthorized for users", async function () {
+		const resp = await request(app)
+			.post("/companies")
+			.send(newCompany)
+			.set("authorization", `Bearer ${u1Token}`);
+		expect(resp.statusCode).toEqual(401);
 	});
 
 	test("bad request with missing data", async function () {
@@ -50,7 +59,7 @@ describe("POST /companies", function () {
 				handle: "new",
 				numEmployees: 10,
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(400);
 	});
 
@@ -61,7 +70,7 @@ describe("POST /companies", function () {
 				...newCompany,
 				logoUrl: "not-a-url",
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(400);
 	});
 });
@@ -133,29 +142,34 @@ describe("GET /companies", function () {
 		expect(resp.body).toEqual({
 			companies: [comp1, comp2],
 		});
-  });
-  
+	});
+
 	test("multiple filters should work.", async () => {
-		const resp = await request(app).get("/companies?name=c&minEmployees=1&maxEmployees=2");
+		const resp = await request(app).get(
+			"/companies?name=c&minEmployees=1&maxEmployees=2"
+		);
 		expect(resp.body).toEqual({
 			companies: [comp1, comp2],
 		});
-		const resp2 = await request(app).get("/companies?name=z&minEmployees=1&maxEmployees=2");
+		const resp2 = await request(app).get(
+			"/companies?name=z&minEmployees=1&maxEmployees=2"
+		);
 		expect(resp2.body).toEqual({
 			companies: [],
 		});
-  });
+	});
 
-  test("conflicting employee filters should throw an error", async () => {
-		const resp = await request(app).get("/companies?maxEmployees=1&minEmployees=3");
+	test("conflicting employee filters should throw an error", async () => {
+		const resp = await request(app).get(
+			"/companies?maxEmployees=1&minEmployees=3"
+		);
 		expect(resp.statusCode).toEqual(400);
-  });
-  
-  test("unknown filters should throw an error", async () => {
+	});
+
+	test("unknown filters should throw an error", async () => {
 		const resp = await request(app).get("/companies?weirdFilter=9");
 		expect(resp.statusCode).toEqual(400);
-  });
-  
+	});
 });
 
 /************************************** GET /companies/:handle */
@@ -202,7 +216,7 @@ describe("PATCH /companies/:handle", function () {
 			.send({
 				name: "C1-new",
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.body).toEqual({
 			company: {
 				handle: "c1",
@@ -215,9 +229,17 @@ describe("PATCH /companies/:handle", function () {
 	});
 
 	test("unauth for anon", async function () {
-		const resp = await request(app).patch(`/companies/c1`).send({
-			name: "C1-new",
-		});
+		const resp = await request(app)
+			.patch(`/companies/c1`)
+			.send({name: "C1-new",});
+		expect(resp.statusCode).toEqual(401);
+	});
+
+	test("unauth for users", async function () {
+		const resp = await request(app)
+			.patch(`/companies/c1`)
+			.send({ name: "C1-new" })
+			.set("authorization", `Bearer ${u1Token}`);
 		expect(resp.statusCode).toEqual(401);
 	});
 
@@ -227,7 +249,7 @@ describe("PATCH /companies/:handle", function () {
 			.send({
 				name: "new nope",
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(404);
 	});
 
@@ -237,7 +259,7 @@ describe("PATCH /companies/:handle", function () {
 			.send({
 				handle: "c1-new",
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(400);
 	});
 
@@ -247,7 +269,7 @@ describe("PATCH /companies/:handle", function () {
 			.send({
 				logoUrl: "not-a-url",
 			})
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(400);
 	});
 });
@@ -258,19 +280,26 @@ describe("DELETE /companies/:handle", function () {
 	test("works for users", async function () {
 		const resp = await request(app)
 			.delete(`/companies/c1`)
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.body).toEqual({ deleted: "c1" });
 	});
-
+	
 	test("unauth for anon", async function () {
 		const resp = await request(app).delete(`/companies/c1`);
 		expect(resp.statusCode).toEqual(401);
 	});
+	
+	test("unauth for users", async function () {
+		const resp = await request(app)
+			.delete(`/companies/c1`)
+			.set("authorization", `Bearer ${u1Token}`);
+			expect(resp.statusCode).toEqual(401);
+		});
 
 	test("not found for no such company", async function () {
 		const resp = await request(app)
 			.delete(`/companies/nope`)
-			.set("authorization", `Bearer ${u1Token}`);
+			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.statusCode).toEqual(404);
 	});
 });
