@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for jobs. */
@@ -9,9 +9,9 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class Job {
 	/** Create a job (from data), update db, return new job data.
 	 *
-	 * data should be { title, salary, equity, company_handle}
+	 * data should be { title, salary, equity, companyHandle}
 	 *
-	 * Returns { id, title, salary, equity, company_handle}
+	 * Returns { id, title, salary, equity, companyHandle}
 	 *
 	 * Throws BadRequestError if job already in database.
 	 * */
@@ -19,7 +19,7 @@ class Job {
 	static async create(data) {
 		const result = await db.query(
 			`INSERT INTO jobs (title, salary, equity, company_handle)
-           VALUES ($1, $2, $3, $4, $5)
+           VALUES ($1, $2, $3, $4)
            RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
 			[data.title, data.salary, data.equity, data.companyHandle]
 		);
@@ -35,7 +35,7 @@ class Job {
 	 * - minSalary  	(integer)
 	 * - hasEquity      (boolean)
 	 *
-	 * Returns [{ id, title, salary, equity, companyHandle}, ...]
+	 * Returns [{ id, title, salary, equity, companyHandle, companyName}, ...]
 	 * */
 
 	static async findAll(searchFilters = {}) {
@@ -43,10 +43,10 @@ class Job {
                             j.title,
                             j.salary,
                             j.equity,
-                            j.company_handle AS "numEmployees"
-                            c.name
+                            j.company_handle AS "companyHandle",
+                            c.name AS "companyName"
                      FROM jobs j
-                        LEFT JOIN companies ON j.company_handle = c.handle`;
+                        LEFT JOIN companies c ON j.company_handle = c.handle`;
 
 		let whereExpressions = [];
 		let queryValues = [];
@@ -57,17 +57,17 @@ class Job {
 
 		if (title) {
 			queryValues.push(`%${title}%`);
-			whereExpressions.push(`name ILIKE $${queryValues.length}`);
+			whereExpressions.push(`j.title ILIKE $${queryValues.length}`);
 		}
 
 		if (minSalary !== undefined) {
 			queryValues.push(minSalary);
-			whereExpressions.push(`salary >= $${queryValues.length}`);
+			whereExpressions.push(`j.salary >= $${queryValues.length}`);
 		}
 
 		if (hasEquity) {
-			queryValues.push(hasEquity);
-			whereExpressions.push(`equity > $${queryValues.length}`);
+			queryValues.push(0);
+			whereExpressions.push(`j.equity > $${queryValues.length}`);
 		}
 
 		if (whereExpressions.length > 0) {
@@ -75,27 +75,29 @@ class Job {
 		}
 
 		// finish building query
-		query += " ORDER BY title";
-
+		query += " ORDER BY j.title";
 		const jobsRes = await db.query(query, queryValues);
 		return jobsRes.rows;
 	}
 
 	/** Given a job, return data about company.
 	 *
-	 * Returns { id, title, salary, equity, companyHandle }
+	 * Returns { id, title, salary, equity, companyHandle, companyName }
 	 *
 	 * Throws NotFoundError if not found.
 	 **/
 
 	static async get(id) {
 		const jobRes = await db.query(
-			`SELECT id,
-                    title,
-                    salary,
-                    equity,
-                    company_handle AS "companyHandle"
-             FROM jobs
+			`SELECT j.id,
+                    j.title,
+                    j.salary,
+                    j.equity,
+                    j.company_handle AS "companyHandle",
+					c.name AS "companyName"
+             FROM jobs j
+			 	LEFT JOIN companies c
+					ON j.company_handle = c.handle
              WHERE id = $1`,
 			[id]
 		);
