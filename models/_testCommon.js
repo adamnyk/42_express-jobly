@@ -8,6 +8,8 @@ async function commonBeforeAll() {
 	await db.query("DELETE FROM companies");
 	// noinspection SqlWithoutWhere
 	await db.query("DELETE FROM users");
+	// noinspection SqlWithoutWhere
+	await db.query("DELETE FROM jobs");
 
 	await db.query(`
     INSERT INTO companies(handle, name, num_employees, description, logo_url)
@@ -30,6 +32,18 @@ async function commonBeforeAll() {
 			await bcrypt.hash("password2", BCRYPT_WORK_FACTOR),
 		]
 	);
+
+	const jobsResults = await db.query(`
+    INSERT INTO jobs(title, salary, equity, company_handle )
+    VALUES ('j1', 10000, 0, 'c1'),
+    	   ('j2', 20000, 0.002, 'c2'),
+    	   ('j3', 30000, 0.03, 'c3')
+		   RETURNING id`);
+	IDs = jobsResults.rows
+	job1ID = jobsResults.rows[0].id
+	job2ID = jobsResults.rows[1].id
+	job3ID = jobsResults.rows[2].id
+
 }
 
 async function commonBeforeEach() {
@@ -44,6 +58,7 @@ async function commonAfterAll() {
 	await db.end();
 }
 
+// Expected company results
 const comp1 = {
 	handle: "c1",
 	name: "C1",
@@ -68,6 +83,32 @@ const comp3 = {
 	logoUrl: "http://c3.img",
 };
 
+// Expected job results
+const job1 = {
+	id: expect.any(Number),
+	title: "j1",
+	salary: 10000,
+	equity: "0",
+	companyHandle: "c1",
+	companyName: "C1",
+};
+const job2 = {
+	id: expect.any(Number),
+	title: "j2",
+	salary: 20000,
+	equity: "0.002",
+	companyHandle: "c2",
+	companyName: "C2",
+};
+const job3 = {
+	id: expect.any(Number),
+	title: "j3",
+	salary: 30000,
+	equity: "0.03",
+	companyHandle: "c3",
+	companyName: "C3",
+};
+
 module.exports = {
 	commonBeforeAll,
 	commonBeforeEach,
@@ -76,4 +117,7 @@ module.exports = {
 	comp1,
 	comp2,
 	comp3,
+	job1,
+	job2,
+	job3,
 };
