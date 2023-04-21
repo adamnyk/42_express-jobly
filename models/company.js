@@ -44,10 +44,10 @@ class Company {
 	 * Can pass in one or more optional searchFilters
 	 * - minEmployees 		(integer)
 	 * - maxEmployees		(integer)
-	 * - name				
-	 * 
+	 * - name
+	 *
 	 * Throws an error if minEmployees > maxEmployees
-	 * 
+	 *
 	 * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
 	 * */
 
@@ -98,28 +98,40 @@ class Company {
 	/** Given a company handle, return data about company.
 	 *
 	 * Returns { handle, name, description, numEmployees, logoUrl, jobs }
-	 *   where jobs is [{ id, title, salary, equity, companyHandle }, ...]
+	 *   where jobs is [{ id, title, salary, equity }, ...]
 	 *
 	 * Throws NotFoundError if not found.
 	 **/
 
-	static async get(handle) {
+	static async get(compHandle) {
 		const companyRes = await db.query(
-			`SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           WHERE handle = $1`,
-			[handle]
+			`SELECT c.handle,
+                  	c.name,
+                  	c.description,
+                  	c.num_employees AS "numEmployees",
+                  	c.logo_url AS "logoUrl",
+					j.id,
+					j.title,
+					j.salary,
+					j.equity
+            FROM companies c
+				LEFT JOIN jobs j ON c.handle = j.company_handle
+           	WHERE handle = $1`,
+			[compHandle]
 		);
 
+
 		const company = companyRes.rows[0];
+		if (!company) throw new NotFoundError(`No company: ${compHandle}`);
 
-		if (!company) throw new NotFoundError(`No company: ${handle}`);
+		const { handle, name, description, numEmployees, logoUrl } =
+			companyRes.rows[0];
+		const jobs = companyRes.rows.map((j) => {
+			const { id, title, salary, equity } = j
+			return { id, title, salary, equity };
+		});
 
-		return company;
+		return { handle, name, description, numEmployees, logoUrl, jobs };
 	}
 
 	/** Update company data with `data`.
