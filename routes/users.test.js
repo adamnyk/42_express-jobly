@@ -190,20 +190,21 @@ describe("GET /users", function () {
 describe("GET /users/:username", function () {
 	test("works for admin", async function () {
 		const resp = await request(app)
-			.get(`/users/u1`)
+			.get(`/users/u3`)
 			.set("authorization", `Bearer ${u2AdminToken}`);
 		expect(resp.body).toEqual({
 			user: {
-				username: "u1",
-				firstName: "U1F",
-				lastName: "U1L",
-				email: "user1@user.com",
+				username: "u3",
+				firstName: "U3F",
+				lastName: "U3L",
+				email: "user3@user.com",
 				isAdmin: false,
+				jobs:[]
 			},
 		});
 	});
 
-	test("works for users that match :username", async function () {
+	test("works for users that match :username. no jobs", async function () {
 		const resp = await request(app)
 			.get(`/users/u1`)
 			.set("authorization", `Bearer ${u1Token}`);
@@ -214,6 +215,7 @@ describe("GET /users/:username", function () {
 				lastName: "U1L",
 				email: "user1@user.com",
 				isAdmin: false,
+				jobs:[]
 			},
 		});
 	});
@@ -259,7 +261,7 @@ describe("PATCH /users/:username", () => {
 		});
 	});
 
-	test("works for users that match :username", async function () {
+	test("works for users that match :username.", async function () {
 		const resp = await request(app)
 			.patch(`/users/u1`)
 			.send({

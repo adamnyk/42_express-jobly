@@ -138,6 +138,15 @@ class User {
 
 		if (!user) throw new NotFoundError(`No user: ${username}`);
 
+		const applicationRes = await db.query(
+			`SELECT job_id AS "jobId"
+			FROM applications
+			WHERE username = $1`,
+			[username]
+		)
+		const jobs = applicationRes.rows.map(r=>r.jobId)
+		user.jobs = jobs
+		
 		return user;
 	}
 
