@@ -245,11 +245,6 @@ describe("apply to job", function () {
 	test("bad request with duplicate data", async function () {
 		try {
 			await User.apply("u1", job2ID);
-			const res = await db.query(
-				`SELECT * FROM applications 
-        WHERE username='u1' AND job_id = $1`,
-				[job2ID]
-			);
 		} catch (err) {
 			expect(err instanceof BadRequestError).toBeTruthy();
 			expect (err.message).toEqual(`User: u1 has already applied to job ID: ${job2ID}`)
@@ -259,11 +254,6 @@ describe("apply to job", function () {
 	test("bad request if bad user", async function () {
 		try {
 			await User.apply("BADUSER", job2ID);
-			const res = await db.query(
-				`SELECT * FROM applications 
-				WHERE username='u1' AND job_id = $1`,
-				[job2ID]
-				);
 			} catch (err) {
 				expect(err instanceof BadRequestError).toBeTruthy();
 				expect (err.message).toEqual(`Username: BADUSER does not exist.`)
@@ -273,16 +263,10 @@ describe("apply to job", function () {
 	test("bad request if bad job", async function () {
 		try {
 			await User.apply("u1", 0);
-			const res = await db.query(
-				`SELECT * FROM applications 
-				WHERE username='u1' AND job_id = $1`,
-				[job1ID]
-				);
 			} catch (err) {
 				expect(err instanceof BadRequestError).toBeTruthy();
 				expect (err.message).toEqual(`Job ID: 0 does not exist.`)
 		}
 	});
-	
 
 });
