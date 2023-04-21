@@ -120,16 +120,20 @@ class Company {
 			[compHandle]
 		);
 
-
 		const company = companyRes.rows[0];
 		if (!company) throw new NotFoundError(`No company: ${compHandle}`);
 
 		const { handle, name, description, numEmployees, logoUrl } =
 			companyRes.rows[0];
-		const jobs = companyRes.rows.map((j) => {
-			const { id, title, salary, equity } = j
-			return { id, title, salary, equity };
-		});
+
+		// Handle creation of jobs array. Return empty array for no jobs. 
+		const jobs = [];
+		if (companyRes.rows[0].id) {
+			companyRes.rows.forEach((j) => {
+				const { id, title, salary, equity } = j;
+				jobs.push( { id, title, salary, equity })
+			});
+		}
 
 		return { handle, name, description, numEmployees, logoUrl, jobs };
 	}

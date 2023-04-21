@@ -35,7 +35,8 @@ async function commonBeforeAll() {
 		description: "Desc3",
 		logoUrl: "http://c3.img",
 	});
-
+	
+	
 	await User.register({
 		username: "u1",
 		firstName: "U1F",

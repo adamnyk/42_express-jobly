@@ -4,7 +4,7 @@ const request = require("supertest");
 
 const db = require("../db");
 const app = require("../app");
-
+const Company = require("../models/company")
 const {
 	commonBeforeAll,
 	commonBeforeEach,
@@ -15,6 +15,7 @@ const {
 	comp1,
 	comp2,
 	comp3,
+	testJobs,
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -177,6 +178,7 @@ describe("GET /companies", function () {
 describe("GET /companies/:handle", function () {
 	test("works for anon", async function () {
 		const resp = await request(app).get(`/companies/c1`);
+		delete testJobs[0].companyHandle
 		expect(resp.body).toEqual({
 			company: {
 				handle: "c1",
@@ -184,20 +186,28 @@ describe("GET /companies/:handle", function () {
 				description: "Desc1",
 				numEmployees: 1,
 				logoUrl: "http://c1.img",
-				jobs: 
+				jobs: [testJobs[0]]
 			},
 		});
 	});
 
 	test("works for anon: company w/o jobs", async function () {
-		const resp = await request(app).get(`/companies/c2`);
+		await Company.create({
+			handle: "c4",
+			name: "C4",
+			numEmployees: 4,
+			description: "Desc4",
+			logoUrl: "http://c4.img",
+		});
+		const resp = await request(app).get(`/companies/c4`);
 		expect(resp.body).toEqual({
 			company: {
-				handle: "c2",
-				name: "C2",
-				description: "Desc2",
-				numEmployees: 2,
-				logoUrl: "http://c2.img",
+				handle: "c4",
+				name: "C4",
+				description: "Desc4",
+				numEmployees: 4,
+				logoUrl: "http://c4.img",
+				jobs:[]
 			},
 		});
 	});
