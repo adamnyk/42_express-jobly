@@ -9,7 +9,7 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class Job {
 	/** Create a job (from data), update db, return new job data.
 	 *
-	 * data should be { title, salary, equity, companyHandle}
+	 * data should be {title, salary, equity, companyHandle}
 	 *
 	 * Returns { id, title, salary, equity, companyHandle}
 	 *
@@ -80,7 +80,7 @@ class Job {
 		return jobsRes.rows;
 	}
 
-	/** Given a job, return data about company.
+	/** Given a job, return data about job.
 	 *
 	 * Returns { id, title, salary, equity, companyHandle, companyName }
 	 *
@@ -109,14 +109,14 @@ class Job {
 		return job;
 	}
 
-	/** Update company data with `data`.
+	/** Update job data with `data`.
 	 *
 	 * This is a "partial update" --- it's fine if data doesn't contain all the
 	 * fields; this only changes provided ones.
 	 *
-	 * Data can include: {title, salary, equity, companyHandle}
+	 * Data can include: { title, salary, equity, companyHandle }
 	 *
-	 * Returns {id, title, salary, equity, company_handle}
+	 * Returns { id, title, salary, equity, company_handle }
 	 *
 	 * Throws NotFoundError if not found.
 	 */
@@ -143,9 +143,9 @@ class Job {
 		return job;
 	}
 
-	/** Delete given company from database; returns undefined.
+	/** Delete given job from database; returns undefined.
 	 *
-	 * Throws NotFoundError if company not found.
+	 * Throws NotFoundError if job not found.
 	 **/
 
 	static async remove(id) {
