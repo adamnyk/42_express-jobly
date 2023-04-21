@@ -11,6 +11,8 @@ const {
 	comp1,
 	comp2,
 	comp3,
+	job1,
+	testCompanies
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -21,6 +23,8 @@ afterAll(commonAfterAll);
 /************************************** create */
 
 describe("create", function () {
+	console.log("testCompanies in TEST",testCompanies)
+	
 	const newCompany = {
 		handle: "new",
 		name: "New",
@@ -139,12 +143,16 @@ describe("findAll", function () {
 describe("get", function () {
 	test("works", async function () {
 		let company = await Company.get("c1");
+		delete job1.id
+		delete job1.companyHandle
+		delete job1.companyName
 		expect(company).toEqual({
 			handle: "c1",
 			name: "C1",
 			description: "Desc1",
 			numEmployees: 1,
 			logoUrl: "http://c1.img",
+			jobs: [{...job1, id: job1ID}]
 		});
 	});
 
